@@ -1,0 +1,17 @@
+ 
+#First, to avoid the error:"(KeyVaultPolicyError) Keyvault policy recoverable is not set" please run the below command to update the hsm purge policy:
+az keyvault update-hsm --hsm-name hsmname --enable-purge-protection true
+ 
+#assign the identity to the storage account https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/storage/common/customer-managed-keys-configure-key-vault-hsm.md
+az storage account update --name storageaccountname--resource-group resourcegroupname --assign-identity
+ 
+#Assign a role to the storage account for access to the managed HSM https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/storage/common/customer-managed-keys-configure-key-vault-hsm.md
+$storage_account_principal = $(az storage account show --name storageaccountanme --resource-group Resourcegroupname --query identity.principalId --output tsv)
+ 
+#Assign a role to the storage account for access to the managed HSM https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/storage/common/customer-managed-keys-configure-key-vault-hsm.md#assign-a-role-to-the-storage-account-for-access-to-the-managed-hsm
+az keyvault role assignment create --hsm-name hsmaname --role "Managed HSM Crypto Service Encryption User" --assignee $storage_account_principal --scope /keys
+ 
+#Configure encryption with a key in the managed HSM https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/storage/common/customer-managed-keys-configure-key-vault-hsm.md#configure-encryption-with-a-key-in-the-managed-hsm
+$hsmurl = $(az keyvault show --hsm-name hsmname --query properties.hsmUri --output tsv)
+az storage account update --name storageaccountname --resource-group resourgegroupname --encryption-key-name myrsakey --encryption-key-source Microsoft.Keyvault --encryption-key-vault $hsmurl
+ 
